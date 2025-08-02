@@ -45,11 +45,3 @@ variable "extension_versions" {
 variable "tags" {
   type = map(string)
 }
-
-variable "ansible_playbook_path" {
-  default = "../ansible/n01708543-playbook.yml"
-}
-
-variable "ansible_inventory_path" {
-  default = "../ansible/inventory.ini"
-}

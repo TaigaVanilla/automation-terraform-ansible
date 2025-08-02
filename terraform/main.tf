@@ -111,9 +111,6 @@ module "linux_vms" {
     monitor_agent = "1.0"
   }
 
-  ansible_playbook_path  = "../ansible/n01708543-playbook.yml"
-  ansible_inventory_path = "../ansible/inventory.ini"
-
   tags = local.common_tags
 }
 
