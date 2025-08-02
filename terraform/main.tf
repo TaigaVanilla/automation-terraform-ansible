@@ -47,6 +47,9 @@ locals {
     for i in range(local.disk_count) :
     "8543-datadisk-${i + 1}"
   ]
+
+  ansible_playbook_path  = "../ansible/n01708543-playbook.yml"
+  ansible_inventory_path = "../ansible/inventory.ini"
 }
 
 module "resource_group" {
