@@ -1,0 +1,82 @@
+---
+- name: Check if data disk exists
+  stat:
+    path: "{{ data_disk_device }}"
+  register: data_disk_check
+
+- name: Display data disk status
+  debug:
+    msg: "Data disk found: {{ data_disk_check.stat.exists }}"
+
+- name: Create partition table on data disk
+  parted:
+    device: "{{ data_disk_device }}"
+    number: 1
+    state: present
+    part_start: "{{ part1_size_start }}"
+    part_end: "{{ part1_size_end }}"
+  when: data_disk_check.stat.exists
+
+- name: Create second partition on data disk
+  parted:
+    device: "{{ data_disk_device }}"
+    number: 2
+    state: present
+    part_start: "{{ part2_size_start }}"
+    part_end: "{{ part2_size_end }}"
+  when: data_disk_check.stat.exists
+
+- name: Create XFS filesystem on first partition
+  filesystem:
+    fstype: "{{ part1_filesystem }}"
+    dev: "{{ part1_device }}"
+  when: data_disk_check.stat.exists
+
+- name: Create EXT4 filesystem on second partition
+  filesystem:
+    fstype: "{{ part2_filesystem }}"
+    dev: "{{ part2_device }}"
+  when: data_disk_check.stat.exists
+
+- name: Create mount points
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ part1_mount_point }}"
+    - "{{ part2_mount_point }}"
+  when: data_disk_check.stat.exists
+
+- name: Mount first partition to /part1
+  ansible.posix.mount:
+    path: "{{ part1_mount_point }}"
+    src: "{{ part1_device }}"
+    fstype: "{{ part1_filesystem }}"
+    state: mounted
+  when: data_disk_check.stat.exists
+
+- name: Mount second partition to /part2
+  mount:
+    path: "{{ part2_mount_point }}"
+    src: "{{ part2_device }}"
+    fstype: "{{ part2_filesystem }}"
+    state: mounted
+  when: data_disk_check.stat.exists
+
+- name: Add mount entries to /etc/fstab for persistence
+  mount:
+    path: "{{ item.path }}"
+    src: "{{ item.src }}"
+    fstype: "{{ item.fstype }}"
+    state: mounted
+    opts: defaults
+  loop:
+    - { path: "{{ part1_mount_point }}", src: "{{ part1_device }}", fstype: "{{ part1_filesystem }}" }
+    - { path: "{{ part2_mount_point }}", src: "{{ part2_device }}", fstype: "{{ part2_filesystem }}" }
+  when: data_disk_check.stat.exists
+
+- name: Display disk partitioning status
+  debug:
+    msg: "Data disk partitioned and mounted successfully"
+  when: data_disk_check.stat.exists 

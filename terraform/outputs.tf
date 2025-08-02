@@ -58,6 +58,10 @@ output "load_balancer_name" {
   value = module.loadbalancer.load_balancer_name
 }
 
+output "loadbalancer_fqdn" {
+  value = module.loadbalancer.load_balancer_fqdn
+}
+
 output "postgres_server_name" {
   value = module.postgres.postgres_server_name
 }

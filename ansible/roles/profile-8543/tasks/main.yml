@@ -1,0 +1,13 @@
+---
+- name: Append test block to /etc/profile
+  blockinfile:
+    path: /etc/profile
+    block: |
+      #Test block added by Ansible……n01708543
+      export TMOUT=1500
+  register: profile_updated
+
+- name: Display profile update status
+  debug:
+    msg: "Profile updated successfully"
+  when: profile_updated.changed 

@@ -1,0 +1,11 @@
+data_disk_device: /dev/sdc
+part1_size_start: 1MiB
+part1_size_end: 4GiB
+part2_size_start: 4GiB
+part2_size_end: 9GiB
+part1_mount_point: /part1
+part2_mount_point: /part2
+part1_filesystem: xfs
+part2_filesystem: ext4
+part1_device: /dev/sdc1
+part2_device: /dev/sdc2 

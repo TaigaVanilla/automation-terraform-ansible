@@ -1,0 +1,16 @@
+---
+- name: start apache
+  service:
+    name: "{{ apache_package_name }}"
+    state: started
+    enabled: yes
+
+- name: restart apache
+  service:
+    name: "{{ apache_package_name }}"
+    state: restarted
+
+- name: reload firewalld
+  service:
+    name: firewalld
+    state: reloaded 

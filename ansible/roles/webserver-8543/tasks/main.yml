@@ -1,0 +1,28 @@
+---
+- name: Install Apache web server
+  package:
+    name: "{{ apache_package_name }}"
+    state: present
+  register: apache_installed
+  notify: start apache
+
+- name: Create index.html with public FQDN
+  template:
+    src: "{{ target_vm_name.replace('-8543', '') }}.html"
+    dest: /var/www/html/index.html
+    mode: '0444'
+    owner: "{{ apache_user }}"
+    group: "{{ apache_group }}"
+  notify: restart apache
+
+- name: Configure firewall to allow HTTP traffic
+  firewalld:
+    port: 80/tcp
+    permanent: yes
+    state: enabled
+  notify: reload firewalld
+
+- name: Display web server status
+  debug:
+    msg: "Apache web server configured successfully"
+  when: apache_installed.changed

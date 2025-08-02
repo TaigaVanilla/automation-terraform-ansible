@@ -9,9 +9,9 @@ locals {
   }
 
   vm_names = {
-    "vm0" = "vm0-8543"
     "vm1" = "vm1-8543"
     "vm2" = "vm2-8543"
+    "vm3" = "vm3-8543"
   }
 
   resource_names = {
@@ -110,6 +110,10 @@ module "linux_vms" {
     nw_agent      = "1.0"
     monitor_agent = "1.0"
   }
+
+  ansible_playbook_path  = "../ansible/n01708543-playbook.yml"
+  ansible_inventory_path = "../ansible/inventory.ini"
+
   tags = local.common_tags
 }
 
@@ -161,8 +165,16 @@ module "loadbalancer" {
   lb_name                    = "8543-loadbalancer"
   lb_pip_name                = "8543-lb-pip"
   lb_sku                     = "Standard"
+  lb_pip_domain_name_label   = "loadbalancer8543"
   lb_frontend_ip_config_name = "PublicFrontend"
   lb_backend_pool_name       = "8543-backend-pool"
+  lb_probe_name              = "http-probe"
+  lb_probe_port              = 80
+  lb_probe_request_path      = "/"
+  lb_rule_name               = "http-rule"
+  lb_rule_protocol           = "Tcp"
+  lb_rule_frontend_port      = 80
+  lb_rule_backend_port       = 80
   linux_vm_nic_ids           = module.linux_vms.linux_vm_nic_ids
   tags                       = local.common_tags
 }

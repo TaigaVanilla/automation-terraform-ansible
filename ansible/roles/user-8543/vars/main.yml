@@ -1,0 +1,9 @@
+cloudadmins_group: cloudadmins
+users:
+  - user100
+  - user200
+  - user300
+target_user_to_fetch_key: user100
+target_vm_name_to_fetch_key: vm1-8543
+local_private_keys_dir: ../private_keys
+local_downloaded_private_key_path: "{{ local_private_keys_dir }}/{{ target_user_to_fetch_key }}_id_rsa"

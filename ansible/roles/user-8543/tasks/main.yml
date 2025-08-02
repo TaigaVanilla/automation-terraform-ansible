@@ -1,0 +1,101 @@
+---
+- name: Create cloudadmins group
+  group:
+    name: "{{ cloudadmins_group }}"
+    state: present
+
+- name: Create users and generate SSH keys
+  user:
+    name: "{{ item }}"
+    state: present
+    groups: cloudadmins,wheel
+    shell: /bin/bash
+    create_home: yes
+    generate_ssh_key: yes
+    ssh_key_bits: 4096
+    ssh_key_file: .ssh/id_rsa
+  loop: "{{ users }}"
+  register: users_created
+
+- name: Fix ownership of user home directories
+  file:
+    path: "/home/{{ item }}"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    recurse: no
+    state: directory
+  loop: "{{ users }}"
+
+- name: Create authorized_keys file for each user
+  file:
+    path: /home/{{ item }}/.ssh/authorized_keys
+    state: touch
+    mode: '0600'
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ users }}"
+
+- name: Read public key content
+  slurp:
+    src: /home/{{ item }}/.ssh/id_rsa.pub
+  register: pub_keys
+  loop: "{{ users }}"
+
+- name: Add public key to authorized_keys
+  authorized_key:
+    user: "{{ item.item }}"
+    key: "{{ item.content | b64decode }}"
+  loop: "{{ pub_keys.results }}"
+
+- name: Set proper permissions for SSH private keys
+  file:
+    path: /home/{{ item }}/.ssh/id_rsa
+    mode: '0600'
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ users }}"
+
+- name: Set proper permissions for SSH public keys
+  file:
+    path: /home/{{ item }}/.ssh/id_rsa.pub
+    mode: '0644'
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ users }}"
+
+- name: Set proper permissions for .ssh directory
+  file:
+    path: /home/{{ item }}/.ssh
+    mode: '0700'
+    owner: "{{ item }}"
+    group: "{{ item }}"
+  loop: "{{ users }}"
+
+- name: Ensure private key directory exists
+  file:
+    path: "{{ local_private_keys_dir }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Download {{ target_user_to_fetch_key }}'s private key to local machine for {{ target_vm_name_to_fetch_key }}
+  fetch:
+    src: /home/{{ target_user_to_fetch_key }}/.ssh/id_rsa
+    dest: "{{ local_downloaded_private_key_path }}"
+    flat: yes
+  when: target_vm_name == '{{ target_vm_name_to_fetch_key }}'
+
+- name: Set permission for downloaded private key on localhost
+  file:
+    path: "{{ local_downloaded_private_key_path }}"
+    mode: '0600'
+  when: target_vm_name == '{{ target_vm_name_to_fetch_key }}'
+  delegate_to: localhost
+  become: false
+
+- name: Display user creation status
+  debug:
+    msg: "Users created successfully"
+  when: users_created.results | selectattr('changed', 'equalto', true) | list | length > 0 

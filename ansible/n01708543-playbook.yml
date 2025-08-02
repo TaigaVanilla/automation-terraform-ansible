@@ -1,0 +1,14 @@
+---
+- name: Configure Linux VMs for n01708543
+  hosts: linux_vms
+  collections:
+    - ansible.posix
+    - community.general
+  become: yes
+  gather_facts: yes
+
+  roles:
+    - profile-8543
+    - user-8543
+    - datadisk-8543
+    - webserver-8543 
